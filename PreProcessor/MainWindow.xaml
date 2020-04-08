@@ -10,32 +10,47 @@
     <Window.DataContext>
         <local:MainViewModel/>
     </Window.DataContext>
-    
+
     <Grid>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="250"/>
-        </Grid.ColumnDefinitions>
-        
-        <Button Grid.Column="0" 
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="80"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0"
+              IsEnabled="{Binding IsIdle}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" 
                 Margin="30"
-                Content="Go!"
-                FontSize="48"
+                Content="Import JHU Daily Data"
+                FontSize="36"
                 Command="{Binding Process}"/>
 
-        <StackPanel Grid.Column="1"
+            <StackPanel Grid.Column="1"
                     Margin="30">
-            <Label Content="Country/Region"/>
-            <ComboBox ItemsSource="{Binding AllCountries}"
+                <Label Content="Country/Region"/>
+                <ComboBox ItemsSource="{Binding AllCountries}"
                      SelectedItem="{Binding SelectedCountry}"/>
-            <Label Content="State/Province"/>
-            <ComboBox ItemsSource="{Binding AllStatesThisCountry}"
+                <Label Content="State/Province"/>
+                <ComboBox ItemsSource="{Binding AllStatesThisCountry}"
                      SelectedItem="{Binding SelectedState}"/>
-            <Label Content="County"/>
-            <ComboBox ItemsSource="{Binding AllCountiesThisState}"
+                <Label Content="County"/>
+                <ComboBox ItemsSource="{Binding AllCountiesThisState}"
                      SelectedItem="{Binding SelectedCounty}"/>
-        </StackPanel>
-        
+            </StackPanel>
+        </Grid>
+
+        <Label Grid.Row="1"
+             FontSize="24"
+             FontStyle="Italic"
+             HorizontalContentAlignment="Center"
+             VerticalContentAlignment="Center"
+             Content="{Binding Message}"/>
+
     </Grid>
 </Window>

@@ -16,6 +16,7 @@ namespace PreProcessor
 {
     public class MainViewModel : NotifyBase
     {
+        private bool _isIdle = true;
         private string _selectedCountry;
         private string _selectedState;
         private string _selectedCounty;
@@ -27,12 +28,24 @@ namespace PreProcessor
         private ConcurrentBag<StateDataPoint> _allStateData = new ConcurrentBag<StateDataPoint>();
         private ConcurrentBag<CountyDataPoint> _allCountyData = new ConcurrentBag<CountyDataPoint>();
 
+        public bool IsIdle
+        {
+            get => _isIdle;
+            set
+            {
+                if (_isIdle == value) return;
+                _isIdle = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string Message
         {
             get => _message;
             set
             {
                 if (_message == value) return;
+                _message = value;
                 OnPropertyChanged();
             }
         }
@@ -120,7 +133,13 @@ namespace PreProcessor
 
                     string[] allReportFiles = Directory.GetFiles(dialog.SelectedPath, "*.csv");
 
+                    Message = "Processing, please wait";
+                    IsIdle = false;
+
                     await Task.Factory.StartNew(() => ParseFilesParallel(allReportFiles));
+
+                    Message = "";
+                    IsIdle = true;
 
                     AllCountries = new ObservableCollection<string>(_allNationalData
                         .Select(data => data.Country)
@@ -157,7 +176,7 @@ namespace PreProcessor
 
         private void ParseFilesParallel(string[] allReportFiles)
         {
-            Message = "Processing, please wait";
+            
 
             Parallel.ForEach(allReportFiles, filePath =>
             {
@@ -188,8 +207,6 @@ namespace PreProcessor
                     _allNationalData.Add(item);
                 }
             });
-
-            Message = "";
         }
 
         private IEnumerable<CovidDataPoint> SummarizeNational(List<StateDataPoint> thisDayStateData)
