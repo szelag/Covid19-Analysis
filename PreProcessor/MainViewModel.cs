@@ -247,16 +247,20 @@ namespace PreProcessor
 
         private IEnumerable<StateDataPoint> SummarizeByState(IEnumerable<CountyDataPoint> thisDayCountyData)
         {
-            DateTime thisDate = thisDayCountyData.First().UpdateTime;
+            /* Developer note: Found a surprisingly big chunk of speed here by using a couple CountyDataPoint arrays
+               rather than just using the input IEnumerable all the way through. */
 
-            foreach (string country in thisDayCountyData.Select(data => data.Country).Distinct())
+            CountyDataPoint[] dataArr = thisDayCountyData.ToArray();
+            DateTime thisDate = dataArr.First().UpdateTime;
+
+            foreach (string country in dataArr.Select(data => data.Country).Distinct())
             {
-                foreach (string state in thisDayCountyData
+                foreach (string state in dataArr
                     .Where(data => data.Country == country) 
                     .Select(data => data.State)
                     .Distinct())
                 {
-                    IEnumerable <CountyDataPoint> relevantData = thisDayCountyData.Where(data => data.Country == country && data.State == state);
+                    CountyDataPoint[] relevantData = dataArr.Where(data => data.Country == country && data.State == state).ToArray();
 
                     yield return new StateDataPoint()
                     {
