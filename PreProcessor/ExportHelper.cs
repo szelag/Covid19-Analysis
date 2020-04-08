@@ -78,7 +78,7 @@ namespace PreProcessor
                     Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
-                if (DoStateExport)
+                if (DoStateExport && !string.IsNullOrWhiteSpace(_main.SelectedState))
                 {
                     IEnumerable<CovidDataPoint> relevantData = _main.AllStateData
                        .Where(data => data.Country == _main.SelectedCountry && data.State == _main.SelectedState)
@@ -87,7 +87,7 @@ namespace PreProcessor
                     Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
-                if (DoCountyExport)
+                if (DoCountyExport && !string.IsNullOrWhiteSpace(_main.SelectedCounty))
                 {
                     IEnumerable<CovidDataPoint> relevantData = _main.AllCountyData
                        .Where(data => data.Country == _main.SelectedCountry && data.State == _main.SelectedState && data.County == _main.SelectedCounty)

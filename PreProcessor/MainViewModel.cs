@@ -247,7 +247,15 @@ namespace PreProcessor
                 .Distinct()
                 .OrderBy(name => name));
 
-            SelectedCounty = AllCountiesThisState.First();
+            if (AllCountiesThisState.Count > 0)
+            {
+                SelectedCounty = AllCountiesThisState.First();
+            }
+            else
+            {
+                SelectedCounty = "";
+            }
+            
         }
 
         private void ParseFilesParallel(string[] allReportFiles)
@@ -373,12 +381,6 @@ namespace PreProcessor
             foreach (string line in allLines)
             {
                 string[] split = line.Split(',');
-                /* For the time being, not particularly interested in some of the random sparse data that doesn't have 
-                   the county, state/province, and nation all paired up */
-                if (string.IsNullOrWhiteSpace(split[1]) || string.IsNullOrWhiteSpace(split[2]) || string.IsNullOrWhiteSpace(split[3]))
-                { 
-                    continue;
-                }
 
                 int.TryParse(split[7], out int confirmed);
                 int.TryParse(split[8], out int deaths);
