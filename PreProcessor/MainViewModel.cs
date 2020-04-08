@@ -21,6 +21,8 @@ namespace PreProcessor
         private string _selectedState;
         private string _selectedCounty;
         private string _message;
+        private string _sourceDataPath;
+        private string _exportDataPath;
         private ObservableCollection<string> _allCountries;
         private ObservableCollection<string> _allStatesThisCountry;
         private ObservableCollection<string> _allCountiesThisState;
@@ -32,6 +34,16 @@ namespace PreProcessor
             _allStatesThisCountry = new ObservableCollection<string>();
             _allCountiesThisState = new ObservableCollection<string>();
             _isIdle = true;
+
+            SourceDataPath = Properties.Settings.Default.SourceDataLocation;
+            ExportDataPath = Properties.Settings.Default.ExportLocation;
+        }
+
+         ~MainViewModel()
+        {
+            Properties.Settings.Default.SourceDataLocation = SourceDataPath;
+            Properties.Settings.Default.ExportLocation = ExportDataPath;
+            Properties.Settings.Default.Save();
         }
 
         public ConcurrentBag<CovidDataPoint> AllNationalData { get; private set; } = new ConcurrentBag<CovidDataPoint>();
@@ -47,6 +59,28 @@ namespace PreProcessor
             {
                 if (_isIdle == value) return;
                 _isIdle = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SourceDataPath
+        {
+            get => _sourceDataPath;
+            set
+            {
+                if (_sourceDataPath == value) return;
+                _sourceDataPath = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ExportDataPath
+        {
+            get => _exportDataPath;
+            set
+            {
+                if (_exportDataPath == value) return;
+                _exportDataPath = value;
                 OnPropertyChanged();
             }
         }
@@ -136,14 +170,13 @@ namespace PreProcessor
             {
                 return new RelayCommand(async () =>
                 {
-                    var dialog = new FolderBrowserDialog
+                    if (string.IsNullOrEmpty(SourceDataPath))
                     {
-                        Description = "Select JHU CSSE Daily Report Location"
-                    };
+                        PickSourceFolder.Execute(null);
+                        if (string.IsNullOrEmpty(SourceDataPath)) return;
+                    }
 
-                    if (dialog.ShowDialog() != DialogResult.OK) return;
-
-                    string[] allReportFiles = Directory.GetFiles(dialog.SelectedPath, "*.csv");
+                    string[] allReportFiles = Directory.GetFiles(SourceDataPath, "*.csv");
 
                     Message = "Processing, please wait";
                     IsIdle = false;
@@ -163,6 +196,36 @@ namespace PreProcessor
 
                 });
             }
+        }
+
+        public ICommand PickSourceFolder
+        {
+            get { return new RelayCommand(() => 
+            {
+                var dialog = new FolderBrowserDialog
+                {
+                    Description = "Select JHU CSSE Daily Report Location"
+                };
+
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                SourceDataPath = dialog.SelectedPath;
+            }); }
+        }
+
+        public ICommand PickExportFolder
+        {
+            get { return new RelayCommand(() => 
+            {
+                var dialog = new FolderBrowserDialog
+                {
+                    Description = "Select Location for Export"
+                };
+
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                ExportDataPath = dialog.SelectedPath;
+            }); }
         }
 
         private void UpdateStates()

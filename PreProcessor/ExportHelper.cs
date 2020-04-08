@@ -61,9 +61,11 @@ namespace PreProcessor
 
                 if (!DoNationalExport && !DoStateExport && !DoCountyExport) { MessageBox.Show("Need to pick SOMETHING to export..."); return; }
 
-                var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "Select Export Location" };
-                if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-                string exportLocation = dialog.SelectedPath;
+                if (string.IsNullOrEmpty(_main.ExportDataPath))
+                {
+                    _main.PickExportFolder.Execute(null);
+                    if (string.IsNullOrEmpty(_main.ExportDataPath)) return;
+                }
 
                 DateTimeFormatInfo dtfi = GetCustomDateFormat();
 
@@ -73,7 +75,7 @@ namespace PreProcessor
                        .Where(data => data.Country == _main.SelectedCountry)
                        .OrderBy(data => data.UpdateTime);
                     string fileName = $"{_main.SelectedCountry} ({relevantData.Select(data => data.UpdateTime).Max().ToString("d", dtfi)}).csv";
-                    Export(relevantData, Path.Combine(exportLocation, fileName));
+                    Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
                 if (DoStateExport)
@@ -82,7 +84,7 @@ namespace PreProcessor
                        .Where(data => data.Country == _main.SelectedCountry && data.State == _main.SelectedState)
                        .OrderBy(data => data.UpdateTime);
                     string fileName = $"{_main.SelectedCountry}-{_main.SelectedState} ({relevantData.Select(data => data.UpdateTime).Max().ToString("d", dtfi)}).csv";
-                    Export(relevantData, Path.Combine(exportLocation, fileName));
+                    Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
                 if (DoCountyExport)
@@ -91,7 +93,7 @@ namespace PreProcessor
                        .Where(data => data.Country == _main.SelectedCountry && data.State == _main.SelectedState && data.County == _main.SelectedCounty)
                        .OrderBy(data => data.UpdateTime);
                     string fileName = $"{_main.SelectedCountry}-{_main.SelectedState}-{_main.SelectedCounty} ({relevantData.Select(data => data.UpdateTime).Max().ToString("d", dtfi)}).csv";
-                    Export(relevantData, Path.Combine(exportLocation, fileName));
+                    Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
                 MessageBox.Show("Export complete!");

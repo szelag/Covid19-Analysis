@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PreProcessor"
         mc:Ignorable="d"
-        Title="Johns Hopkins Data Processor" Height="450" Width="800">
+        Title="Johns Hopkins Data Processor" Height="490" Width="800">
 
     <Window.DataContext>
         <local:MainViewModel/>
@@ -15,7 +15,8 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="80"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="70"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0"
@@ -54,7 +55,33 @@
             </StackPanel>
         </Grid>
 
-        <Label Grid.Row="1"
+        <StackPanel Grid.Row="1">
+            <Label Content="Source Data"/>
+            <StackPanel Orientation="Horizontal"
+                        Margin="2">
+                <Button Content="Pick"
+                        Padding="3"
+                        Command="{Binding PickSourceFolder}"/>
+                <TextBox Text="{Binding SourceDataPath}"
+                         Width="600"
+                         HorizontalContentAlignment="Left"
+                         VerticalContentAlignment="Center"/>
+            </StackPanel>
+            
+            <Label Content="Export Location"/>
+            <StackPanel Orientation="Horizontal"
+                        Margin="2">
+                <Button Content="Pick"
+                        Padding="3"
+                        Command="{Binding PickExportFolder}"/>
+                <TextBox Text="{Binding ExportDataPath}"
+                         Width="600"
+                         HorizontalContentAlignment="Left"
+                         VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+        
+        <Label Grid.Row="2"
              FontSize="24"
              FontStyle="Italic"
              HorizontalContentAlignment="Center"
