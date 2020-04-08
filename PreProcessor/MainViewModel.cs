@@ -146,6 +146,7 @@ namespace PreProcessor
                         .Distinct()
                         .OrderBy(name => name));
 
+                    // Because I'm American and this is my primary concern...
                     SelectedCountry = "US";
 
                 });
@@ -177,11 +178,14 @@ namespace PreProcessor
         private void ParseFilesParallel(string[] allReportFiles)
         {
             
-
             Parallel.ForEach(allReportFiles, filePath =>
             {
                 string[] allLines = File.ReadAllLines(filePath);
                 var thisDayStateData = new List<StateDataPoint>();
+
+                /* About half way through the Johns Hopkins data they change format and start breaking things
+                   down by county, not just by state (at least within the US). As a result, two different
+                   ways of parsing that data and adding it to the aggregate. */
 
                 if (allLines[0].StartsWith("FIPS"))
                 {
@@ -197,15 +201,10 @@ namespace PreProcessor
                     thisDayStateData.AddRange(ParseAsStateData(allLines.Skip(1)));
                 }
 
-                foreach (StateDataPoint item in thisDayStateData)
-                {
-                    _allStateData.Add(item);
-                }
-
-                foreach (CovidDataPoint item in SummarizeNational(thisDayStateData))
-                {
-                    _allNationalData.Add(item);
-                }
+                // Can't .AddRange() on a ConcurrentBag<T> apparently...
+                foreach (StateDataPoint item in thisDayStateData) { _allStateData.Add(item); }
+                
+                foreach (CovidDataPoint item in SummarizeNational(thisDayStateData)) { _allNationalData.Add(item); }
             });
         }
 
@@ -234,10 +233,10 @@ namespace PreProcessor
 
             foreach (string country in thisDayCountyData.Select(data => data.Country).Distinct())
             {
-
                 foreach (string state in thisDayCountyData
                     .Where(data => data.Country == country) 
-                    .Select(data => data.State).Distinct())
+                    .Select(data => data.State)
+                    .Distinct())
                 {
                     IEnumerable <CountyDataPoint> relevantData = thisDayCountyData.Where(data => data.Country == country && data.State == state);
 
@@ -260,7 +259,8 @@ namespace PreProcessor
             // Province/State,Country/Region,Last Update,Confirmed,Deaths,Recovered,Latitude,Longitude
             foreach (string line in allLines)
             {
-                // Messy...
+                /* In some early data there's a trickle of entries that start to get added that are like
+                   "Boston, MA" etc. That messes with this CSV parsing, so I decide to skip it entirely. */
                 if (line.Contains('"')) continue;
 
                 string[] split = line.Split(',');
@@ -288,8 +288,10 @@ namespace PreProcessor
             foreach (string line in allLines)
             {
                 string[] split = line.Split(',');
+                /* For the time being, not particularly interested in some of the random sparse data that doesn't have 
+                   the county, state/province, and nation all paired up */
                 if (string.IsNullOrWhiteSpace(split[1]) || string.IsNullOrWhiteSpace(split[2]) || string.IsNullOrWhiteSpace(split[3]))
-                {
+                { 
                     continue;
                 }
 
@@ -312,13 +314,18 @@ namespace PreProcessor
 
         private DateTime DateParser(string dateString)
         {
+            /* The Johns Hopkins data uses a variety of date/time formats (whyyyy..??), so
+               this helper method was needed to sort them out. Was about time I learned how to use
+               a Regex... */
+
             Match monthDayYearLong = new Regex(@"\d{1,2}\/\d{1,2}\/\d{4}").Match(dateString);
             Match monthDayYearShort = new Regex(@"\d{1,2}\/\d{1,2}\/\d{2}\s").Match(dateString);
             Match yearMonthDay = new Regex(@"\d{4}-\d{2}-\d{2}").Match(dateString);
 
-            int year = 1985;
-            int month = 2;
-            int day = 22;
+            // Arbitrary values for initialization
+            int year = 1970;
+            int month = 1;
+            int day = 1;
 
             if (monthDayYearLong.Success)
             {
