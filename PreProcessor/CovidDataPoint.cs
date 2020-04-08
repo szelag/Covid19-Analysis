@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PreProcessor
 {
-    internal class CovidDataPoint
+    public class CovidDataPoint
     {
         public DateTime UpdateTime { get; set; }
 
@@ -15,14 +15,16 @@ namespace PreProcessor
         public int Deaths { get; set; }
 
         public int Recoveries { get; set; }
+
+        public int Active { get => Confirmed - Deaths - Recoveries; }
     }
 
-    internal class CountyDataPoint : StateDataPoint
+    public class CountyDataPoint : StateDataPoint
     {
         public string County { get; set; }
     }
 
-    internal class StateDataPoint : CovidDataPoint
+    public class StateDataPoint : CovidDataPoint
     {
         public string State { get; set; }
     }

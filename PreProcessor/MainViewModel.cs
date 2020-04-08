@@ -16,17 +16,29 @@ namespace PreProcessor
 {
     public class MainViewModel : NotifyBase
     {
-        private bool _isIdle = true;
+        private bool _isIdle;
         private string _selectedCountry;
         private string _selectedState;
         private string _selectedCounty;
         private string _message;
-        private ObservableCollection<string> _allCountries = new ObservableCollection<string>();
-        private ObservableCollection<string> _allStatesThisCountry = new ObservableCollection<string>();
-        private ObservableCollection<string> _allCountiesThisState = new ObservableCollection<string>();
-        private ConcurrentBag<CovidDataPoint> _allNationalData = new ConcurrentBag<CovidDataPoint>();
-        private ConcurrentBag<StateDataPoint> _allStateData = new ConcurrentBag<StateDataPoint>();
-        private ConcurrentBag<CountyDataPoint> _allCountyData = new ConcurrentBag<CountyDataPoint>();
+        private ObservableCollection<string> _allCountries;
+        private ObservableCollection<string> _allStatesThisCountry;
+        private ObservableCollection<string> _allCountiesThisState;
+
+        public MainViewModel()
+        {
+            Exporter = new ExportHelper(this);
+            _allCountries = new ObservableCollection<string>();
+            _allStatesThisCountry = new ObservableCollection<string>();
+            _allCountiesThisState = new ObservableCollection<string>();
+            _isIdle = true;
+        }
+
+        public ConcurrentBag<CovidDataPoint> AllNationalData { get; private set; } = new ConcurrentBag<CovidDataPoint>();
+        public ConcurrentBag<StateDataPoint> AllStateData { get; private set; } = new ConcurrentBag<StateDataPoint>();
+        public ConcurrentBag<CountyDataPoint> AllCountyData { get; private set; } = new ConcurrentBag<CountyDataPoint>();
+
+        public ExportHelper Exporter { get; private set; }
 
         public bool IsIdle
         {
@@ -141,7 +153,7 @@ namespace PreProcessor
                     Message = "";
                     IsIdle = true;
 
-                    AllCountries = new ObservableCollection<string>(_allNationalData
+                    AllCountries = new ObservableCollection<string>(AllNationalData
                         .Select(data => data.Country)
                         .Distinct()
                         .OrderBy(name => name));
@@ -155,7 +167,7 @@ namespace PreProcessor
 
         private void UpdateStates()
         {
-            AllStatesThisCountry = new ObservableCollection<string>(_allStateData
+            AllStatesThisCountry = new ObservableCollection<string>(AllStateData
                 .Where(data => data.Country == SelectedCountry)
                 .Select(data => data.State)
                 .Distinct()
@@ -166,7 +178,7 @@ namespace PreProcessor
 
         private void UpdateCounties()
         {
-            AllCountiesThisState = new ObservableCollection<string>(_allCountyData
+            AllCountiesThisState = new ObservableCollection<string>(AllCountyData
                 .Where(data => data.Country == SelectedCountry && data.State == SelectedState)
                 .Select(data => data.County)
                 .Distinct()
@@ -192,7 +204,7 @@ namespace PreProcessor
                     IEnumerable<CountyDataPoint> thisDayCountyData = ParseAsCountyData(allLines.Skip(1));
                     foreach (CountyDataPoint item in thisDayCountyData)
                     {
-                        _allCountyData.Add(item);
+                        AllCountyData.Add(item);
                     }
                     thisDayStateData.AddRange(SummarizeByState(thisDayCountyData));
                 }
@@ -202,9 +214,9 @@ namespace PreProcessor
                 }
 
                 // Can't .AddRange() on a ConcurrentBag<T> apparently...
-                foreach (StateDataPoint item in thisDayStateData) { _allStateData.Add(item); }
+                foreach (StateDataPoint item in thisDayStateData) { AllStateData.Add(item); }
                 
-                foreach (CovidDataPoint item in SummarizeNational(thisDayStateData)) { _allNationalData.Add(item); }
+                foreach (CovidDataPoint item in SummarizeNational(thisDayStateData)) { AllNationalData.Add(item); }
             });
         }
 
