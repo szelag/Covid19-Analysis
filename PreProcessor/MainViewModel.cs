@@ -189,9 +189,15 @@ namespace PreProcessor
 
         private void ParseFilesParallel(string[] allReportFiles)
         {
-            
-            Parallel.ForEach(allReportFiles, filePath =>
+            int onFile = 0;
+            int nFiles = allReportFiles.Length;
+
+            // Degree of parallelism here is arbitrary, could play around with it
+            Parallel.ForEach(allReportFiles, new ParallelOptions { MaxDegreeOfParallelism = 3 }, filePath =>
             {
+                onFile++;
+                Message = $"Processing {onFile} of {nFiles} reports...";
+
                 string[] allLines = File.ReadAllLines(filePath);
                 var thisDayStateData = new List<StateDataPoint>();
 
