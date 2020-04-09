@@ -96,12 +96,28 @@ namespace PreProcessor
 
         private void Export(IEnumerable<CovidDataPoint> data, string fullPath)
         {
-            DateTimeFormatInfo dtfi = GetCustomDateFormat();
+            double[] timeData = data.Select(d => (d.UpdateTime - _main.ReferenceDate).TotalDays).ToArray();
+
+            double[] confirmed = data.Select(d => (double)d.Confirmed).ToArray();
+            double[] active = data.Select(d => (double)d.Confirmed).ToArray();
+            double[] deaths = data.Select(d => (double)d.Deaths).ToArray();
+            double[] recoveries = data.Select(d => (double)d.Recoveries).ToArray();
+
+            double[] confirmed_rate = Utilities.ComputeDerivative(timeData, confirmed);
+            double[] active_rate = Utilities.ComputeDerivative(timeData, active);
+            double[] deaths_rate = Utilities.ComputeDerivative(timeData, deaths);
+            double[] recoveries_rate = Utilities.ComputeDerivative(timeData, recoveries);
 
             List<string> outputContents = new List<string>();
-            outputContents.Add($"Days Since {_main.ReferenceDate.ToString("d", dtfi)},Confirmed,Active,Deaths,Recoveries");
+            DateTimeFormatInfo dtfi = GetCustomDateFormat();
+            outputContents.Add($"Days Since {_main.ReferenceDate.ToString("d", dtfi)},Confirmed,Active,Deaths,Recoveries,dConfirmed-dt,dActive-dt,dDeaths-dt,dRecoveries-dt");
 
-            outputContents.AddRange(data.Select(d => $"{(d.UpdateTime - _main.ReferenceDate).TotalDays},{d.Confirmed},{d.Active},{d.Deaths},{d.Recoveries}"));
+            for (int i = 0; i < timeData.Length; i++)
+            {
+                outputContents.Add(string.Join(",", timeData[i],
+                    confirmed[i], active[i], deaths[i], recoveries[i],
+                    confirmed_rate[i], active_rate[i], deaths_rate[i], recoveries_rate[i]));
+            }
 
             File.WriteAllLines(fullPath, outputContents);
         }
