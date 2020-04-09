@@ -37,29 +37,35 @@
                               Model="{Binding Plotter.ActivePlot}"/>
 
                 <StackPanel Grid.Row="1"
-                            Orientation="Horizontal">
-                    <StackPanel.Resources>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="Width"
-                                    Value="125"/>
-                            <Setter Property="Margin"
-                                    Value="10,0,0,0"/>
-                            <Setter Property="HorizontalContentAlignment"
-                                    Value="Center"/>
-                        </Style>
-                    </StackPanel.Resources>
+                            Orientation="Vertical">
                     
-                    <CheckBox Content="Log y-Axis"
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Resources>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="Width"
+                                    Value="125"/>
+                                <Setter Property="Margin"
+                                    Value="10,0,0,0"/>
+                                <Setter Property="HorizontalContentAlignment"
+                                    Value="Center"/>
+                            </Style>
+                        </StackPanel.Resources>
+
+                        <CheckBox Content="Log y-Axis"
                               IsChecked="{Binding Plotter.UseLogScale}"
                               VerticalContentAlignment="Center"
                               Margin="10,0,0,0"/>
-                    <ComboBox ItemsSource="{Binding Plotter.PlotTypes}"
+                        <ComboBox ItemsSource="{Binding Plotter.PlotTypes}"
                               SelectedItem="{Binding Plotter.SelectedPlotType}"/>
-                    <ComboBox ItemsSource="{Binding Plotter.Measurements}"
+                        <ComboBox ItemsSource="{Binding Plotter.Measurements}"
                               SelectedItem="{Binding Plotter.SelectedMeasurement}"/>
-                    <ComboBox ItemsSource="{Binding Plotter.PlotDataSources}"
+                        <ComboBox ItemsSource="{Binding Plotter.PlotDataSources}"
                               SelectedItem="{Binding Plotter.SelectedPlotDataSource}"/>
+                    </StackPanel>
+                    <Label Content="Note: Charting active cases requires recovery &amp; death data to be non-zero"
+                           FontStyle="Italic"/>
                 </StackPanel>
+             
             </Grid>
             
             <StackPanel Grid.Column="1"

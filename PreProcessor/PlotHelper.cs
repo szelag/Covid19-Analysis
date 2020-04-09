@@ -30,7 +30,7 @@ namespace PreProcessor
             _useLogYScale = false;
             PlotDataSources = new ObservableCollection<string> { "National", "State", "County" };
             PlotTypes = new ObservableCollection<string> { "Quantity" /*, "Daily Rate" */ };
-            Measurements = new ObservableCollection<string> { "Confirmed Cases", "Deaths" };
+            Measurements = new ObservableCollection<string> { "Confirmed Cases", "Active Cases", "Deaths", "Recoveries" };
 
             SelectedPlotDataSource = PlotDataSources[0];
             SelectedPlotType = PlotTypes[0];
@@ -161,6 +161,12 @@ namespace PreProcessor
                     break;
                 case "Deaths":
                     yData = sourceData.Select(data => data.Deaths);
+                    break;
+                case "Active Cases":
+                    yData = sourceData.Select(data => data.Active);
+                    break;
+                case "Recoveries":
+                    yData = sourceData.Select(data => data.Recoveries);
                     break;
             }
 
