@@ -57,7 +57,7 @@ namespace PreProcessor
         {
             get { return new RelayCommand(() => 
             { 
-                if (_main.AllNationalData.IsEmpty) { MessageBox.Show("Gotta load data first, champ."); return; }
+                if (_main.FilteredNationalData.Count() == 0) { MessageBox.Show("Gotta load data first, champ."); return; }
 
                 if (!DoNationalExport && !DoStateExport && !DoCountyExport) { MessageBox.Show("Need to pick SOMETHING to export..."); return; }
 
@@ -71,27 +71,21 @@ namespace PreProcessor
 
                 if (DoNationalExport)
                 {
-                    IEnumerable<CovidDataPoint> relevantData = _main.AllNationalData
-                       .Where(data => data.Country == _main.SelectedCountry)
-                       .OrderBy(data => data.UpdateTime);
+                    IEnumerable<CovidDataPoint> relevantData = _main.FilteredNationalData;
                     string fileName = $"{_main.SelectedCountry} ({relevantData.Select(data => data.UpdateTime).Max().ToString("d", dtfi)}).csv";
                     Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
                 if (DoStateExport && !string.IsNullOrWhiteSpace(_main.SelectedState))
                 {
-                    IEnumerable<CovidDataPoint> relevantData = _main.AllStateData
-                       .Where(data => data.Country == _main.SelectedCountry && data.State == _main.SelectedState)
-                       .OrderBy(data => data.UpdateTime);
+                    IEnumerable<CovidDataPoint> relevantData = _main.FilteredStateData;
                     string fileName = $"{_main.SelectedCountry}-{_main.SelectedState} ({relevantData.Select(data => data.UpdateTime).Max().ToString("d", dtfi)}).csv";
                     Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }
 
                 if (DoCountyExport && !string.IsNullOrWhiteSpace(_main.SelectedCounty))
                 {
-                    IEnumerable<CovidDataPoint> relevantData = _main.AllCountyData
-                       .Where(data => data.Country == _main.SelectedCountry && data.State == _main.SelectedState && data.County == _main.SelectedCounty)
-                       .OrderBy(data => data.UpdateTime);
+                    IEnumerable<CovidDataPoint> relevantData = _main.FilteredCountyData;
                     string fileName = $"{_main.SelectedCountry}-{_main.SelectedState}-{_main.SelectedCounty} ({relevantData.Select(data => data.UpdateTime).Max().ToString("d", dtfi)}).csv";
                     Export(relevantData, Path.Combine(_main.ExportDataPath, fileName));
                 }

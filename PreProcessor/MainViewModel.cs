@@ -26,10 +26,15 @@ namespace PreProcessor
         private ObservableCollection<string> _allCountries;
         private ObservableCollection<string> _allStatesThisCountry;
         private ObservableCollection<string> _allCountiesThisState;
+        private ConcurrentBag<CovidDataPoint> _allNationalData;
+        private ConcurrentBag<StateDataPoint> _allStateData;
+        private ConcurrentBag<CountyDataPoint> _allCountyData ;
 
         public MainViewModel()
         {
-            Exporter = new ExportHelper(this);
+            _allNationalData = new ConcurrentBag<CovidDataPoint>();
+            _allStateData = new ConcurrentBag<StateDataPoint>();
+            _allCountyData = new ConcurrentBag<CountyDataPoint>();
             _allCountries = new ObservableCollection<string>();
             _allStatesThisCountry = new ObservableCollection<string>();
             _allCountiesThisState = new ObservableCollection<string>();
@@ -37,6 +42,9 @@ namespace PreProcessor
 
             SourceDataPath = Properties.Settings.Default.SourceDataLocation;
             ExportDataPath = Properties.Settings.Default.ExportLocation;
+
+            Exporter = new ExportHelper(this);
+            Plotter = new PlotHelper(this);
         }
 
          ~MainViewModel()
@@ -46,11 +54,32 @@ namespace PreProcessor
             Properties.Settings.Default.Save();
         }
 
-        public ConcurrentBag<CovidDataPoint> AllNationalData { get; private set; } = new ConcurrentBag<CovidDataPoint>();
-        public ConcurrentBag<StateDataPoint> AllStateData { get; private set; } = new ConcurrentBag<StateDataPoint>();
-        public ConcurrentBag<CountyDataPoint> AllCountyData { get; private set; } = new ConcurrentBag<CountyDataPoint>();
+        public event EventHandler UserDataSelectionChanged;
 
         public ExportHelper Exporter { get; private set; }
+
+        public PlotHelper Plotter { get; private set; }
+
+        public IEnumerable<CovidDataPoint> FilteredNationalData
+        {
+            get => _allNationalData
+                       .Where(data => data.Country == SelectedCountry)
+                       .OrderBy(data => data.UpdateTime);
+        }
+
+        public IEnumerable<StateDataPoint> FilteredStateData
+        {
+            get => _allStateData
+                       .Where(data => data.Country == SelectedCountry && data.State == SelectedState)
+                       .OrderBy(data => data.UpdateTime);
+        }
+
+        public IEnumerable<CountyDataPoint> FilteredCountyData
+        {
+            get => _allCountyData
+                       .Where(data => data.Country == SelectedCountry && data.State == SelectedState && data.County == SelectedCounty)
+                       .OrderBy(data => data.UpdateTime);
+        }
 
         public bool IsIdle
         {
@@ -105,6 +134,7 @@ namespace PreProcessor
                 _selectedCountry = value;
                 OnPropertyChanged();
                 UpdateStates();
+                OnUserDataSelectionChanged();
             }
         }
 
@@ -117,6 +147,7 @@ namespace PreProcessor
                 _selectedState = value;
                 OnPropertyChanged();
                 UpdateCounties();
+                OnUserDataSelectionChanged();
             }
         }
 
@@ -128,6 +159,7 @@ namespace PreProcessor
                 if (_selectedCounty == value) return;
                 _selectedCounty = value;
                 OnPropertyChanged();
+                OnUserDataSelectionChanged();
             }
         }
 
@@ -186,7 +218,7 @@ namespace PreProcessor
                     Message = "";
                     IsIdle = true;
 
-                    AllCountries = new ObservableCollection<string>(AllNationalData
+                    AllCountries = new ObservableCollection<string>(_allNationalData
                         .Select(data => data.Country)
                         .Distinct()
                         .OrderBy(name => name));
@@ -230,7 +262,7 @@ namespace PreProcessor
 
         private void UpdateStates()
         {
-            AllStatesThisCountry = new ObservableCollection<string>(AllStateData
+            AllStatesThisCountry = new ObservableCollection<string>(_allStateData
                 .Where(data => data.Country == SelectedCountry)
                 .Select(data => data.State)
                 .Distinct()
@@ -241,7 +273,7 @@ namespace PreProcessor
 
         private void UpdateCounties()
         {
-            AllCountiesThisState = new ObservableCollection<string>(AllCountyData
+            AllCountiesThisState = new ObservableCollection<string>(_allCountyData
                 .Where(data => data.Country == SelectedCountry && data.State == SelectedState)
                 .Select(data => data.County)
                 .Distinct()
@@ -254,9 +286,10 @@ namespace PreProcessor
             else
             {
                 SelectedCounty = "";
-            }
-            
+            } 
         }
+
+        private void OnUserDataSelectionChanged() => UserDataSelectionChanged?.Invoke(this, new EventArgs());
 
         private void ParseFilesParallel(string[] allReportFiles)
         {
@@ -281,7 +314,7 @@ namespace PreProcessor
                     IEnumerable<CountyDataPoint> thisDayCountyData = ParseAsCountyData(allLines.Skip(1));
                     foreach (CountyDataPoint item in thisDayCountyData)
                     {
-                        AllCountyData.Add(item);
+                        _allCountyData.Add(item);
                     }
                     thisDayStateData.AddRange(SummarizeByState(thisDayCountyData));
                 }
@@ -291,9 +324,9 @@ namespace PreProcessor
                 }
 
                 // Can't .AddRange() on a ConcurrentBag<T> apparently...
-                foreach (StateDataPoint item in thisDayStateData) { AllStateData.Add(item); }
+                foreach (StateDataPoint item in thisDayStateData) { _allStateData.Add(item); }
                 
-                foreach (CovidDataPoint item in SummarizeNational(thisDayStateData)) { AllNationalData.Add(item); }
+                foreach (CovidDataPoint item in SummarizeNational(thisDayStateData)) { _allNationalData.Add(item); }
             });
         }
 
