@@ -96,15 +96,12 @@ namespace PreProcessor
 
         private void Export(IEnumerable<CovidDataPoint> data, string fullPath)
         {
-            // Arbitrary, but gives us a numerical time line
-            DateTime referenceDate = new DateTime(2020, 3, 1);
-
             DateTimeFormatInfo dtfi = GetCustomDateFormat();
 
             List<string> outputContents = new List<string>();
-            outputContents.Add($"Days Since {referenceDate.ToString("d", dtfi)},Confirmed,Active,Deaths,Recoveries");
+            outputContents.Add($"Days Since {_main.ReferenceDate.ToString("d", dtfi)},Confirmed,Active,Deaths,Recoveries");
 
-            outputContents.AddRange(data.Select(d => $"{(d.UpdateTime - referenceDate).TotalDays},{d.Confirmed},{d.Active},{d.Deaths},{d.Recoveries}"));
+            outputContents.AddRange(data.Select(d => $"{(d.UpdateTime - _main.ReferenceDate).TotalDays},{d.Confirmed},{d.Active},{d.Deaths},{d.Recoveries}"));
 
             File.WriteAllLines(fullPath, outputContents);
         }

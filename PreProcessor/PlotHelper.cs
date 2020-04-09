@@ -134,21 +134,24 @@ namespace PreProcessor
             if (_main.FilteredNationalData.Count() == 0) return;
 
             IEnumerable<CovidDataPoint> sourceData = null;
+            string title = "";
             switch (SelectedPlotDataSource)
             {
                 case "National":
                     sourceData = _main.FilteredNationalData;
+                    title = _main.SelectedCountry;
                     break;
                 case "State":
                     sourceData = _main.FilteredStateData;
+                    title = _main.SelectedState;
                     break;
                 case "County":
                     sourceData = _main.FilteredCountyData;
+                    title = _main.SelectedCounty;
                     break;
             }
 
-            DateTime referenceDate = new DateTime(2020, 3, 1);
-            double[] timeData = sourceData.Select(data => (data.UpdateTime - referenceDate).TotalDays).ToArray();
+            double[] timeData = sourceData.Select(data => (data.UpdateTime - _main.ReferenceDate).TotalDays).ToArray();
             IEnumerable<int> yData = null;
 
             switch (SelectedMeasurement)
@@ -170,12 +173,12 @@ namespace PreProcessor
             };
             xySeries.Points.AddRange(timeData.Zip(yData, (x, y) => new ScatterPoint(x, y)));
 
-            PlotModel plot = new PlotModel();
+            PlotModel plot = new PlotModel() { Title = title };
             plot.Series.Add(xySeries);
 
             LinearAxis xAxis = new LinearAxis
             {
-                Title = $"Days since {referenceDate.ToLongDateString()}",
+                Title = $"Days since {_main.ReferenceDate.ToLongDateString()}",
                 MajorGridlineStyle = LineStyle.Dash,
                 Position = AxisPosition.Bottom
             };

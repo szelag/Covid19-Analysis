@@ -17,12 +17,14 @@ namespace PreProcessor
     public class MainViewModel : NotifyBase
     {
         private bool _isIdle;
+        private bool _excludeBeforeReference;
         private string _selectedCountry;
         private string _selectedState;
         private string _selectedCounty;
         private string _message;
         private string _sourceDataPath;
         private string _exportDataPath;
+        private DateTime _referenceDate;
         private ObservableCollection<string> _allCountries;
         private ObservableCollection<string> _allStatesThisCountry;
         private ObservableCollection<string> _allCountiesThisState;
@@ -32,6 +34,7 @@ namespace PreProcessor
 
         public MainViewModel()
         {
+            _referenceDate = new DateTime(2020, 3, 1);
             _allNationalData = new ConcurrentBag<CovidDataPoint>();
             _allStateData = new ConcurrentBag<StateDataPoint>();
             _allCountyData = new ConcurrentBag<CountyDataPoint>();
@@ -56,6 +59,8 @@ namespace PreProcessor
 
         public event EventHandler UserDataSelectionChanged;
 
+        private DateTime FilterReferenceDate => ExcludeBeforeReference ? ReferenceDate : new DateTime(1900, 1, 1);
+
         public ExportHelper Exporter { get; private set; }
 
         public PlotHelper Plotter { get; private set; }
@@ -63,22 +68,40 @@ namespace PreProcessor
         public IEnumerable<CovidDataPoint> FilteredNationalData
         {
             get => _allNationalData
-                       .Where(data => data.Country == SelectedCountry)
+                       .Where(data => data.Country == SelectedCountry 
+                              && data.UpdateTime >= FilterReferenceDate)
                        .OrderBy(data => data.UpdateTime);
         }
 
         public IEnumerable<StateDataPoint> FilteredStateData
         {
             get => _allStateData
-                       .Where(data => data.Country == SelectedCountry && data.State == SelectedState)
+                       .Where(data => data.Country == SelectedCountry 
+                              && data.State == SelectedState 
+                              && data.UpdateTime >= FilterReferenceDate)
                        .OrderBy(data => data.UpdateTime);
         }
 
         public IEnumerable<CountyDataPoint> FilteredCountyData
         {
             get => _allCountyData
-                       .Where(data => data.Country == SelectedCountry && data.State == SelectedState && data.County == SelectedCounty)
+                       .Where(data => data.Country == SelectedCountry 
+                              && data.State == SelectedState 
+                              && data.County == SelectedCounty 
+                              && data.UpdateTime >= FilterReferenceDate)
                        .OrderBy(data => data.UpdateTime);
+        }
+
+        public bool ExcludeBeforeReference
+        {
+            get => _excludeBeforeReference;
+            set
+            {
+                if (_excludeBeforeReference == value) ;
+                _excludeBeforeReference = value;
+                OnPropertyChanged();
+                OnUserDataSelectionChanged();
+            }
         }
 
         public bool IsIdle
@@ -158,6 +181,18 @@ namespace PreProcessor
             {
                 if (_selectedCounty == value) return;
                 _selectedCounty = value;
+                OnPropertyChanged();
+                OnUserDataSelectionChanged();
+            }
+        }
+
+        public DateTime ReferenceDate
+        {
+            get => _referenceDate;
+            set
+            {
+                if (_referenceDate == value) return;
+                _referenceDate = value;
                 OnPropertyChanged();
                 OnUserDataSelectionChanged();
             }
