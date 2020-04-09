@@ -166,7 +166,12 @@ namespace PreProcessor
 
             // TODO Quantity vs. rate
 
-            ScatterSeries xySeries = new ScatterSeries 
+            ActivePlot = PlotModelBuilder(title, timeData, yData);
+        }
+
+        private PlotModel PlotModelBuilder(string title, double[] timeData, IEnumerable<int> yData)
+        {
+            ScatterSeries xySeries = new ScatterSeries
             {
                 MarkerFill = OxyColors.DodgerBlue,
                 MarkerType = MarkerType.Circle
@@ -199,8 +204,7 @@ namespace PreProcessor
 
             plot.Axes.Add(xAxis);
             plot.Axes.Add(yAxis);
-
-            ActivePlot = plot;
+            return plot;
         }
     }
 }
