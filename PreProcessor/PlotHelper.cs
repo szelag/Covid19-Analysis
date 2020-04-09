@@ -163,7 +163,11 @@ namespace PreProcessor
 
             // TODO Quantity vs. rate
 
-            ScatterSeries xySeries = new ScatterSeries { MarkerFill = OxyColors.DodgerBlue };
+            ScatterSeries xySeries = new ScatterSeries 
+            {
+                MarkerFill = OxyColors.DodgerBlue,
+                MarkerType = MarkerType.Circle
+            };
             xySeries.Points.AddRange(timeData.Zip(yData, (x, y) => new ScatterPoint(x, y)));
 
             PlotModel plot = new PlotModel();
