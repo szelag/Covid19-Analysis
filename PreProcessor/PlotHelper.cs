@@ -29,7 +29,7 @@ namespace PreProcessor
 
             _useLogYScale = false;
             PlotDataSources = new ObservableCollection<string> { "National", "State", "County" };
-            PlotTypes = new ObservableCollection<string> { "Quantity" /*, "Daily Rate" */ };
+            PlotTypes = new ObservableCollection<string> { "Quantity", "Daily Rate" };
             Measurements = new ObservableCollection<string> { "Confirmed Cases", "Active Cases", "Deaths", "Recoveries" };
 
             SelectedPlotDataSource = PlotDataSources[0];
@@ -152,30 +152,31 @@ namespace PreProcessor
             }
 
             double[] timeData = sourceData.Select(data => (data.UpdateTime - _main.ReferenceDate).TotalDays).ToArray();
-            IEnumerable<int> yData = null;
+            IEnumerable<double> yData = null;
 
             switch (SelectedMeasurement)
             {
                 case "Confirmed Cases":
-                    yData = sourceData.Select(data => data.Confirmed);
+                    yData = sourceData.Select(data => (double)data.Confirmed);
                     break;
                 case "Deaths":
-                    yData = sourceData.Select(data => data.Deaths);
+                    yData = sourceData.Select(data => (double)data.Deaths);
                     break;
                 case "Active Cases":
-                    yData = sourceData.Select(data => data.Active);
+                    yData = sourceData.Select(data => (double)data.Active);
                     break;
                 case "Recoveries":
-                    yData = sourceData.Select(data => data.Recoveries);
+                    yData = sourceData.Select(data => (double)data.Recoveries);
                     break;
             }
 
-            // TODO Quantity vs. rate
+            if (SelectedPlotType == "Daily Rate") { yData = Utilities.ComputeDerivative(timeData, yData.ToArray()); }
 
             ActivePlot = PlotModelBuilder(title, timeData, yData);
         }
 
-        private PlotModel PlotModelBuilder(string title, double[] timeData, IEnumerable<int> yData)
+
+        private PlotModel PlotModelBuilder(string title, IEnumerable<double> timeData, IEnumerable<double> yData)
         {
             ScatterSeries xySeries = new ScatterSeries
             {
