@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PreProcessor"
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="Johns Hopkins Data Processor" Height="490" Width="800">
+        Title="Processor for Johns Hopkins Data" Height="490" Width="800">
 
     <Window.DataContext>
         <local:MainViewModel/>
