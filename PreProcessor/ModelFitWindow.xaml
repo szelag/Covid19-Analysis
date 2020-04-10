@@ -37,13 +37,13 @@
                 </Style>
             </StackPanel.Resources>
             <Label Content="Peak Cases"/>
-            <TextBox Text="{Binding PeakActiveCaseCount}"/>
+            <TextBox Text="{Binding Path=PeakActiveCaseCount, StringFormat={}{0:0}}"/>
             <Label Content="...After X Days from Reference"/>
-            <TextBox Text="{Binding DaysSinceReferenceForPeak}"/>
+            <TextBox Text="{Binding Path=DaysSinceReferenceForPeak, StringFormat={}{0:0.0}}"/>
             <Label Content="Growth Rate Factor"/>
-            <TextBox Text="{Binding RateFactor}"/>
+            <TextBox Text="{Binding Path=RateFactor, StringFormat={}{0:0.00}}"/>
             <Label Content="Extend Model X Days"/>
-            <TextBox Text="{Binding ExtendModelDays}"/>
+            <TextBox Text="{Binding Path=ExtendModelDays, StringFormat={}{0:0}}"/>
             <Button Margin="0,10,0,0"
                     Content="Auto Fit"
                     Width="100"
