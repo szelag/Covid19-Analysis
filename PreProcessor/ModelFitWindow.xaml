@@ -13,7 +13,20 @@
             <ColumnDefinition Width="200"/>
         </Grid.ColumnDefinitions>
 
-        <oxy:PlotView Model="{Binding ModelDataOverlay}"/>
+        <Grid Grid.Column="0">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <oxy:PlotView Grid.Row="0" 
+                          Model="{Binding ModelDataOverlay}"/>
+            <oxy:PlotView Grid.Row="1" 
+                          Model="{Binding ModelDataDerivativeOverlay}"/>
+        </Grid>
+        
+        
 
         <StackPanel Grid.Column="1"
                     Margin="10">

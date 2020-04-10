@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using OxyPlot;
+using OxyPlot.Axes;
 using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace PreProcessor
         private double _rateFactor;
         private double _extendModelDays;
         private PlotModel _modelDataOverlay;
+        private PlotModel _modelDataDerivativeOverlay;
 
         public ModelFitViewModel(double[] timeData, double[] caseData)
         {
@@ -32,7 +34,7 @@ namespace PreProcessor
             _rateFactor = 15;
             _extendModelDays = 5;
 
-            UpdatePlot();
+            UpdatePlots();
         }
 
         public double PeakActiveCaseCount
@@ -43,7 +45,7 @@ namespace PreProcessor
                 if (_peakActiveCaseCount == value) return;
                 _peakActiveCaseCount = value;
                 OnPropertyChanged();
-                UpdatePlot();
+                UpdatePlots();
             }
         }
 
@@ -55,7 +57,7 @@ namespace PreProcessor
                 if (_daysSinceReferenceForPeak == value) return;
                 _daysSinceReferenceForPeak = value;
                 OnPropertyChanged();
-                UpdatePlot();
+                UpdatePlots();
             }
         }
 
@@ -67,7 +69,7 @@ namespace PreProcessor
                 if (_rateFactor == value) return;
                 _rateFactor = value;
                 OnPropertyChanged();
-                UpdatePlot();
+                UpdatePlots();
             }
         }
 
@@ -79,6 +81,7 @@ namespace PreProcessor
                 if (_extendModelDays == value) return;
                 _extendModelDays = value;
                 OnPropertyChanged();
+                UpdatePlots();
             }
         }
 
@@ -89,6 +92,17 @@ namespace PreProcessor
             {
                 if (_modelDataOverlay == value) return;
                 _modelDataOverlay = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PlotModel ModelDataDerivativeOverlay
+        {
+            get => _modelDataDerivativeOverlay;
+            set
+            {
+                if (_modelDataDerivativeOverlay == value) return;
+                _modelDataDerivativeOverlay = value;
                 OnPropertyChanged();
             }
         }
@@ -104,8 +118,9 @@ namespace PreProcessor
             }); }
         }
 
-        private void UpdatePlot()
+        private void UpdatePlots()
         {
+            /* ---------- Quantity ---------- */
             var measurementScatter = new ScatterSeries() { MarkerType = MarkerType.Circle, MarkerFill = OxyColors.DodgerBlue };
             measurementScatter.Points.AddRange(_timeData.Zip(_caseData, (x, y) => new ScatterPoint(x, y)));
 
@@ -121,8 +136,51 @@ namespace PreProcessor
             var model = new PlotModel();
             model.Series.Add(measurementScatter);
             model.Series.Add(modelLineSeries);
-
+            LinearAxis measurementXAxis = new LinearAxis
+            {
+                Title = "Days Since Reference",
+                MajorGridlineStyle = LineStyle.Dash,
+                Position = AxisPosition.Bottom
+            };
+            LinearAxis measurementYAxis = new LinearAxis 
+            { 
+                Title = "Case Count",
+                MajorGridlineStyle = LineStyle.Dash,
+                Position = AxisPosition.Left
+            };
+            model.Axes.Add(measurementXAxis);
+            model.Axes.Add(measurementYAxis);
+            
             ModelDataOverlay = model;
+
+            /* ---------- Derivative ---------- */
+            var measurementDerivativeScatter = new ScatterSeries() { MarkerType = MarkerType.Circle, MarkerFill = OxyColors.DodgerBlue };
+            double[] measurementDerivative = Utilities.ComputeDerivative(_timeData, _caseData);
+            measurementDerivativeScatter.Points.AddRange(_timeData.Zip(measurementDerivative, (x, y) => new ScatterPoint(x, y)));
+
+            // Easier than finding the analytic derivative of a Gauss function, and keeps methods the same
+            double[] modelDerivative = Utilities.ComputeDerivative(xModel.ToArray(), yModel.ToArray());
+            var modelDerivativeSeries = new LineSeries { Color = OxyColors.Red };
+            modelDerivativeSeries.Points.AddRange(xModel.Zip(modelDerivative, (x, y) => new DataPoint(x, y)));
+
+            var derivativeModel = new PlotModel();
+            derivativeModel.Series.Add(measurementDerivativeScatter);
+            derivativeModel.Series.Add(modelDerivativeSeries);
+            LinearAxis derivativeXAxis = new LinearAxis
+            {
+                Title = "Days Since Reference",
+                MajorGridlineStyle = LineStyle.Dash,
+                Position = AxisPosition.Bottom
+            };
+            LinearAxis derivativeYAxis = new LinearAxis
+            {
+                Title = "Daily Case Rate",
+                MajorGridlineStyle = LineStyle.Dash,
+                Position = AxisPosition.Left
+            };
+            derivativeModel.Axes.Add(derivativeXAxis);
+            derivativeModel.Axes.Add(derivativeYAxis);
+            ModelDataDerivativeOverlay = derivativeModel;
         }
 
         private double[] FitModel()
