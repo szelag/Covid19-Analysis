@@ -1,10 +1,12 @@
-﻿using OxyPlot;
+﻿using GalaSoft.MvvmLight.Command;
+using OxyPlot;
 using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace PreProcessor
 {
@@ -23,10 +25,12 @@ namespace PreProcessor
             _timeData = timeData;
             _caseData = caseData;
 
+            var pairedData = _timeData.Zip(_caseData, (time, cases) => new { Days = time, CaseCount = cases });
+
             _peakActiveCaseCount = _caseData.Max();
-            // TODO Find based on peak number
-            _daysSinceReferenceForPeak = _timeData.Max();
+            _daysSinceReferenceForPeak = pairedData.First(data => data.CaseCount == _caseData.Max()).Days;
             _rateFactor = 15;
+            _extendModelDays = 5;
 
             UpdatePlot();
         }
@@ -89,6 +93,17 @@ namespace PreProcessor
             }
         }
 
+        public ICommand AutoFit
+        {
+            get { return new RelayCommand(() => 
+            {
+                double[] newCoefficients = FitModel();
+                PeakActiveCaseCount = newCoefficients[0];
+                DaysSinceReferenceForPeak = newCoefficients[1];
+                RateFactor = newCoefficients[2];
+            }); }
+        }
+
         private void UpdatePlot()
         {
             var measurementScatter = new ScatterSeries() { MarkerType = MarkerType.Circle, MarkerFill = OxyColors.DodgerBlue };
@@ -112,7 +127,31 @@ namespace PreProcessor
 
         private double[] FitModel()
         {
-            throw new NotImplementedException();
+            double[,] xData = new double[_timeData.Length, 2];
+            for (int i = 0; i < _timeData.Length; i++)
+            {
+                xData[i, 0] = _timeData[i];
+            }
+
+            // Lower and upper bounds are in order peak case count, day on which peak occurs, and rate factor
+            double[] lowerBounds = { _caseData.Max(), _timeData[0], 0.5 };
+            double[] upperBounds = { 5e6, _timeData.Last() + 60, 50.0 };
+            double epsx = 0.000001;
+            int maxits = 0;
+            int info;
+            alglib.lsfitstate state;
+            alglib.lsfitreport rep;
+            double diffstep = 0.0001;
+            double[] newCoefficients;
+
+            // Guess / seed values will be current user values 
+            alglib.lsfitcreatef(xData, _caseData, new[] { PeakActiveCaseCount, DaysSinceReferenceForPeak, RateFactor }, diffstep, out state);
+            alglib.lsfitsetbc(state, lowerBounds, upperBounds);
+            alglib.lsfitsetcond(state, epsx, maxits);
+            alglib.lsfitfit(state, Gauss.EvaluateWrapper, null, null);
+            alglib.lsfitresults(state, out info, out newCoefficients, out rep);
+
+            return newCoefficients;
         }
     }
 }
