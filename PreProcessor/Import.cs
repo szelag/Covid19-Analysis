@@ -9,6 +9,17 @@ namespace PreProcessor
 {
     internal static class Import
     {
+        private static string CleanQuotedCommaString(string input)
+        {
+            // There are some entries that include something like "Korea, South" on a line, which need to be addressed
+            return Regex.Replace(input, "\"[^\"]+\"", delegate (Match match)
+            {
+                string v = match.ToString();
+                IEnumerable<string> temp = v.Split(',').Select(s => s.Trim().Replace("\"", "")).ToArray().Reverse();
+                return string.Join(" ", temp);
+            });
+        }
+
         internal static IEnumerable<CovidDataPoint> SummarizeNational(List<StateDataPoint> thisDayStateData)
         {
             DateTime thisDate = thisDayStateData.First().UpdateTime;
@@ -64,12 +75,16 @@ namespace PreProcessor
             // Province/State,Country/Region,Last Update,Confirmed,Deaths,Recovered,Latitude,Longitude
             foreach (string line in allLines)
             {
-                /* In some early data there's a trickle of entries that start to get added that are like
-                   "Boston, MA" etc. That messes with this CSV parsing, so I decide to skip it entirely. */
-                if (line.Contains('"')) continue;
+                string cleanedString = CleanQuotedCommaString(line);
 
-                string[] split = line.Split(',');
+                /* Handful of points from early-mid data for random towns and counties before they switched over to detailed
+                   accounting of everything. Going to skip these for now - probably need to circle back. */
 
+                Regex regex = new Regex(@"[A-Z]{2}\s.");
+                Match match = regex.Match(cleanedString);
+                if (match.Success) continue;
+
+                string[] split = cleanedString.Split(',');
                 int.TryParse(split[3], out int confirmed);
                 int.TryParse(split[4], out int deaths);
                 int.TryParse(split[5], out int recoveries);
@@ -92,7 +107,9 @@ namespace PreProcessor
             // FIPS,Admin2,Province_State,Country_Region,Last_Update,Lat,Long_,Confirmed,Deaths,Recovered,Active,Combined_Key
             foreach (string line in allLines)
             {
-                string[] split = line.Split(',');
+                string cleanedLine = CleanQuotedCommaString(line);
+
+                string[] split = cleanedLine.Split(',');
 
                 int.TryParse(split[7], out int confirmed);
                 int.TryParse(split[8], out int deaths);
