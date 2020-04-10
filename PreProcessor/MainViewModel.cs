@@ -97,7 +97,7 @@ namespace PreProcessor
             get => _excludeBeforeReference;
             set
             {
-                if (_excludeBeforeReference == value) ;
+                if (_excludeBeforeReference == value) return;
                 _excludeBeforeReference = value;
                 OnPropertyChanged();
                 OnUserDataSelectionChanged();

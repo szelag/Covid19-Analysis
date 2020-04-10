@@ -1,0 +1,53 @@
+﻿<Window x:Class="PreProcessor.ModelFitWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PreProcessor"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="Model Fitting" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <oxy:PlotView Grid.Row="0" 
+                          Model="{Binding ModelDataOverlay}"/>
+            <oxy:PlotView Grid.Row="1" 
+                          Model="{Binding ModelDataDerivativeOverlay}"/>
+        </Grid>
+        
+        
+
+        <StackPanel Grid.Column="1"
+                    Margin="10">
+            <StackPanel.Resources>
+                <Style TargetType="TextBox">
+                    <Setter Property="HorizontalContentAlignment"
+                            Value="Center"/>
+                </Style>
+            </StackPanel.Resources>
+            <Label Content="Peak Cases"/>
+            <TextBox Text="{Binding Path=PeakActiveCaseCount, StringFormat={}{0:0}}"/>
+            <Label Content="...After X Days from Reference"/>
+            <TextBox Text="{Binding Path=DaysSinceReferenceForPeak, StringFormat={}{0:0.0}}"/>
+            <Label Content="Growth Rate Factor"/>
+            <TextBox Text="{Binding Path=RateFactor, StringFormat={}{0:0.00}}"/>
+            <Label Content="Extend Model X Days"/>
+            <TextBox Text="{Binding Path=ExtendModelDays, StringFormat={}{0:0}}"/>
+            <Button Margin="0,10,0,0"
+                    Content="Auto Fit"
+                    Width="100"
+                    Command="{Binding AutoFit}"/>
+        </StackPanel>
+    </Grid>
+</Window>

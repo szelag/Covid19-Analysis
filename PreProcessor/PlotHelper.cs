@@ -1,4 +1,5 @@
-﻿using OxyPlot;
+﻿using GalaSoft.MvvmLight.Command;
+using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace PreProcessor
 {
@@ -129,32 +131,52 @@ namespace PreProcessor
             }
         }
 
+        public ICommand LaunchModelFit
+        {
+            get { return new RelayCommand(() => 
+            {
+                IEnumerable<CovidDataPoint> sourceData = GetSourceDataReference(SelectedPlotDataSource);
+                double[] timeData = sourceData.Select(data => (data.UpdateTime - _main.ReferenceDate).TotalDays).ToArray();
+                double[] yData = GetMeasurementData(sourceData, "Active Cases").ToArray();
+
+                var vm = new ModelFitViewModel(timeData, yData);
+                var window = new ModelFitWindow { DataContext = vm };
+                window.Show();
+            }); }
+        }
+
         private void UpdatePlot()
         {
             if (_main.FilteredNationalData.Count() == 0) return;
 
-            IEnumerable<CovidDataPoint> sourceData = null;
+            IEnumerable<CovidDataPoint> sourceData = GetSourceDataReference(SelectedPlotDataSource);
             string title = "";
             switch (SelectedPlotDataSource)
             {
                 case "National":
-                    sourceData = _main.FilteredNationalData;
                     title = _main.SelectedCountry;
                     break;
                 case "State":
-                    sourceData = _main.FilteredStateData;
                     title = _main.SelectedState;
                     break;
                 case "County":
-                    sourceData = _main.FilteredCountyData;
                     title = _main.SelectedCounty;
                     break;
             }
 
             double[] timeData = sourceData.Select(data => (data.UpdateTime - _main.ReferenceDate).TotalDays).ToArray();
+            IEnumerable<double> yData = GetMeasurementData(sourceData, SelectedMeasurement);
+
+            if (SelectedPlotType == "Daily Rate") { yData = Utilities.ComputeDerivative(timeData, yData.ToArray()); }
+
+            ActivePlot = PlotModelBuilder(title, timeData, yData);
+        }
+
+        IEnumerable<double> GetMeasurementData(IEnumerable<CovidDataPoint> sourceData, string measurementName)
+        {
             IEnumerable<double> yData = null;
 
-            switch (SelectedMeasurement)
+            switch (measurementName)
             {
                 case "Confirmed Cases":
                     yData = sourceData.Select(data => (double)data.Confirmed);
@@ -170,11 +192,28 @@ namespace PreProcessor
                     break;
             }
 
-            if (SelectedPlotType == "Daily Rate") { yData = Utilities.ComputeDerivative(timeData, yData.ToArray()); }
-
-            ActivePlot = PlotModelBuilder(title, timeData, yData);
+            return yData;
         }
 
+        IEnumerable<CovidDataPoint> GetSourceDataReference(string plotSourceName)
+        {
+            IEnumerable<CovidDataPoint> sourceData = null;
+
+            switch (SelectedPlotDataSource)
+            {
+                case "National":
+                    sourceData = _main.FilteredNationalData;
+                    break;
+                case "State":
+                    sourceData = _main.FilteredStateData;
+                    break;
+                case "County":
+                    sourceData = _main.FilteredCountyData;
+                    break;
+            }
+
+            return sourceData;
+        }
 
         private PlotModel PlotModelBuilder(string title, IEnumerable<double> timeData, IEnumerable<double> yData)
         {

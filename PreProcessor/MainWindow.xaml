@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PreProcessor"
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="Processor for Johns Hopkins Data" Height="600" Width="800">
+        Title="Processor for Johns Hopkins Data" Height="600" Width="850">
 
     <Window.DataContext>
         <local:MainViewModel/>
@@ -43,7 +43,7 @@
                         <StackPanel.Resources>
                             <Style TargetType="ComboBox">
                                 <Setter Property="Width"
-                                    Value="125"/>
+                                    Value="120"/>
                                 <Setter Property="Margin"
                                     Value="10,0,0,0"/>
                                 <Setter Property="HorizontalContentAlignment"
@@ -61,6 +61,10 @@
                               SelectedItem="{Binding Plotter.SelectedMeasurement}"/>
                         <ComboBox ItemsSource="{Binding Plotter.PlotDataSources}"
                               SelectedItem="{Binding Plotter.SelectedPlotDataSource}"/>
+                        <Button Content="Model Fit"
+                                Margin="10,0,0,0"
+                                Width="70"
+                                Command="{Binding Plotter.LaunchModelFit}"/>
                     </StackPanel>
                     <Label Content="Note: Charting active cases requires recovery &amp; death data to be non-zero"
                            FontStyle="Italic"/>
