@@ -99,7 +99,7 @@ namespace PreProcessor
             double[] timeData = data.Select(d => (d.UpdateTime - _main.ReferenceDate).TotalDays).ToArray();
 
             double[] confirmed = data.Select(d => (double)d.Confirmed).ToArray();
-            double[] active = data.Select(d => (double)d.Confirmed).ToArray();
+            double[] active = data.Select(d => (double)d.Active).ToArray();
             double[] deaths = data.Select(d => (double)d.Deaths).ToArray();
             double[] recoveries = data.Select(d => (double)d.Recoveries).ToArray();
 
