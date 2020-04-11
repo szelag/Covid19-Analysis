@@ -121,7 +121,12 @@ namespace PreProcessor
         private void UpdatePlots()
         {
             /* ---------- Quantity ---------- */
-            var measurementScatter = new ScatterSeries() { MarkerType = MarkerType.Circle, MarkerFill = OxyColors.DodgerBlue };
+            var measurementScatter = new ScatterSeries() 
+            { 
+                MarkerType = MarkerType.Circle,
+                MarkerFill = OxyColors.DodgerBlue,
+                Title = "Actual Data"
+            };
             measurementScatter.Points.AddRange(_timeData.Zip(_caseData, (x, y) => new ScatterPoint(x, y)));
 
             int nModelPoints = 100;
@@ -130,10 +135,15 @@ namespace PreProcessor
             double xStep = (modelXMax - modelXMin) / (nModelPoints - 1);
             IEnumerable<double> xModel = Enumerable.Range(0, nModelPoints).Select(i => modelXMin + (double)i * xStep);
             IEnumerable<double> yModel = xModel.Select(x => Gauss.Evaluate(x, PeakActiveCaseCount, DaysSinceReferenceForPeak, RateFactor));
-            var modelLineSeries = new LineSeries { Color = OxyColors.Red };
+            var modelLineSeries = new LineSeries 
+            { 
+                Color = OxyColors.Red,
+                Title = "Model"
+            };
             modelLineSeries.Points.AddRange(xModel.Zip(yModel, (x, y) => new DataPoint(x, y)));
 
             var model = new PlotModel();
+            model.LegendPosition = LegendPosition.LeftTop;
             model.Series.Add(measurementScatter);
             model.Series.Add(modelLineSeries);
             LinearAxis measurementXAxis = new LinearAxis
@@ -154,16 +164,26 @@ namespace PreProcessor
             ModelDataOverlay = model;
 
             /* ---------- Derivative ---------- */
-            var measurementDerivativeScatter = new ScatterSeries() { MarkerType = MarkerType.Circle, MarkerFill = OxyColors.DodgerBlue };
+            var measurementDerivativeScatter = new ScatterSeries() 
+            {
+                MarkerType = MarkerType.Circle, 
+                MarkerFill = OxyColors.DodgerBlue,
+                Title = "Actual Data"
+            };
             double[] measurementDerivative = Utilities.ComputeDerivative(_timeData, _caseData);
             measurementDerivativeScatter.Points.AddRange(_timeData.Zip(measurementDerivative, (x, y) => new ScatterPoint(x, y)));
 
             // Easier than finding the analytic derivative of a Gauss function, and keeps methods the same
             double[] modelDerivative = Utilities.ComputeDerivative(xModel.ToArray(), yModel.ToArray());
-            var modelDerivativeSeries = new LineSeries { Color = OxyColors.Red };
+            var modelDerivativeSeries = new LineSeries 
+            { 
+                Color = OxyColors.Red,
+                Title = "Model"
+            };
             modelDerivativeSeries.Points.AddRange(xModel.Zip(modelDerivative, (x, y) => new DataPoint(x, y)));
 
             var derivativeModel = new PlotModel();
+            derivativeModel.LegendPosition = LegendPosition.LeftTop;
             derivativeModel.Series.Add(measurementDerivativeScatter);
             derivativeModel.Series.Add(modelDerivativeSeries);
             LinearAxis derivativeXAxis = new LinearAxis
